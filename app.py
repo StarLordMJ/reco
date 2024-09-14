@@ -89,7 +89,7 @@ def predict_places(input_categories: str) -> List[str]:
 
 st.title('Place Predictor')
 
-st.image("https://th.bing.com/th/id/OIP.5phYC2RP1C2QdLlhAj43HgHaEK?rs=1&pid=ImgDetMain", caption="Sri Lankan Tourism", use_column_width=True)
+st.image("https://th.bing.com/th/id/R.18a7ed761e763c783ef54b31d967e37d?rik=tUwLgcZq%2bxlUOw&pid=ImgRaw&r=0", caption="Sri Lankan Tourism", use_column_width=True)
 
 activity_categories = ['cycling', 'historical monuments', 'village homestays', 'butterfly watching', 'hot springs', 'wildlife viewing', 'sea cruises', 'themed parks', 'craft workshops', 'fishing', 'sailing', 'history tours', 'literary tours', 'public art installations', 'temple pilgrimages', 'architecture tours', 'golfing', 'hot air ballooning', 'spiritual retreats', 'cultural experiences', 'botanical gardens', 'boat safaris', 'caving', 'cultural festivals', 'museum visits', 'mountain biking', 'camping', 'turtle watching', 'historic walks', 'safaris', 'waterfalls', 'scuba diving', 'elephant rides', 'bird watching', 'ayurvedic spa treatments', 'horse shows', 'traditional ceremonies', 'surfing', 'historic sites', 'art classes', 'city tours', 'theater', 'amusement parks', 'architecture photography', 'beachfront dining', 'kayaking', 'beach visits', 'rock climbing', 'arts and culture', 'snorkeling', 'animal encounters', 'archaeological sites', 'sailing lessons', 'whale watching', 'local crafts', 'yoga retreats', 'paddleboarding', 'horseback riding', 'zip-lining', 'outdoor adventures', 'planetarium visits', 'water parks', 'photography', 'sightseeing', 'tea tasting', 'hiking', 'river cruises', 'landscape photography']
 
