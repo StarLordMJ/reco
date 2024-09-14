@@ -92,7 +92,7 @@ st.title('Place Predictor')
 activity_categories = ['cycling', 'historical monuments', 'village homestays', 'butterfly watching', 'hot springs', 'wildlife viewing', 'sea cruises', 'themed parks', 'craft workshops', 'fishing', 'sailing', 'history tours', 'literary tours', 'public art installations', 'temple pilgrimages', 'architecture tours', 'golfing', 'hot air ballooning', 'spiritual retreats', 'cultural experiences', 'botanical gardens', 'boat safaris', 'caving', 'cultural festivals', 'museum visits', 'mountain biking', 'camping', 'turtle watching', 'historic walks', 'safaris', 'waterfalls', 'scuba diving', 'elephant rides', 'bird watching', 'ayurvedic spa treatments', 'horse shows', 'traditional ceremonies', 'surfing', 'historic sites', 'art classes', 'city tours', 'theater', 'amusement parks', 'architecture photography', 'beachfront dining', 'kayaking', 'beach visits', 'rock climbing', 'arts and culture', 'snorkeling', 'animal encounters', 'archaeological sites', 'sailing lessons', 'whale watching', 'local crafts', 'yoga retreats', 'paddleboarding', 'horseback riding', 'zip-lining', 'outdoor adventures', 'planetarium visits', 'water parks', 'photography', 'sightseeing', 'tea tasting', 'hiking', 'river cruises', 'landscape photography']
 
 st.write('Please input from these Activity Categories:')
-st.write(activity_categories)
+st.write(', '.join(activity_categories)) 
 input_categories = st.text_input("Enter categories (comma-separated):", "wildlife")
 
 if st.button('Predict Places'):
