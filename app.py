@@ -2,8 +2,8 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
+from typing import List, Dict
 
-# Load the saved models and vectorizers
 @st.cache_resource
 def load_models():
     knn_classifier0 = joblib.load('knn_classifier0.pkl')
@@ -12,15 +12,17 @@ def load_models():
     tfidf_vectorizer1 = joblib.load('tfidf_vectorizer1.pkl')
     return knn_classifier0, knn_classifier1, tfidf_vectorizer0, tfidf_vectorizer1
 
-# Load the datasets
+knn_classifier0, knn_classifier1, tfidf_vectorizer0, tfidf_vectorizer1 = load_models()
+
 @st.cache_data
 def load_data():
     df0 = pd.read_csv('places_v7.csv')
     df1 = pd.read_csv('places_v8.csv')
     return df0, df1
 
-# Function to calculate composite score
-def calculate_score(row):
+df0, df1 = load_data()
+
+def calculate_score(row: pd.Series) -> float:
     rating = row['rating']
     rating_count = row['user_ratings_total']
     positive_count = row['positive_words']
@@ -34,57 +36,67 @@ def calculate_score(row):
     )
     return score
 
-# Function to get predictions for a single category
-def get_verified_top_2_predictions(category, df, classifier, tfidf_vectorizer):
+df0['score'] = df0.apply(calculate_score, axis=1)
+df1['score'] = df1.apply(calculate_score, axis=1)
+
+def get_verified_predictions(category: str, df: pd.DataFrame, classifier, tfidf_vectorizer, n_neighbors: int = 10) -> List[Dict]:
     category_tfidf = tfidf_vectorizer.transform([category])
-    top_10_predictions = classifier.kneighbors(category_tfidf, n_neighbors=10, return_distance=False)[0]
-    
+    top_predictions = classifier.kneighbors(category_tfidf, n_neighbors=n_neighbors, return_distance=False)[0]
+
     verified_places = []
-    for prediction in top_10_predictions:
+    for prediction in top_predictions:
         place_row = df.iloc[prediction]
-        actual_category = place_row['categories']
-        
-        if category.lower() in actual_category.lower():
+        if category.lower() in place_row['categories'].lower():
             verified_places.append(place_row)
     
-    if len(verified_places) > 0:
+    if verified_places:
         verified_df = pd.DataFrame(verified_places)
-        verified_df_sorted = verified_df.sort_values('score', ascending=False).head(2)
-        return verified_df_sorted['name'].tolist()
+        verified_df_sorted = verified_df.sort_values('score', ascending=False)
+        return verified_df_sorted[['name', 'rating', 'user_ratings_total', 'score']].to_dict('records')
     
     return []
 
-# Main Streamlit app
-def main():
-    st.title("Place Recommender")
+def predict_places(input_categories: str) -> List[str]:
+    category_list = [category.strip() for category in input_categories.split(',')]
+    final_places_list = []
 
-    # Load models and data
-    knn_classifier0, knn_classifier1, tfidf_vectorizer0, tfidf_vectorizer1 = load_models()
-    df0, df1 = load_data()
+    for category in category_list:
+        verified_places_0 = get_verified_predictions(category, df0, knn_classifier0, tfidf_vectorizer0)
+        verified_places_1 = get_verified_predictions(category, df1, knn_classifier1, tfidf_vectorizer1)
+        
+        combined_places = verified_places_0 + verified_places_1
+        if combined_places:
+            final_places_list.append(combined_places[0]['name'])
 
-    # Recalculate the scores
-    df0['score'] = df0.apply(calculate_score, axis=1)
-    df1['score'] = df1.apply(calculate_score, axis=1)
-
-    # User input
-    input_categories = st.text_input("Enter categories (comma-separated):", "wildlife, theater, safaris")
-
-    if st.button("Get Recommendations"):
-        category_list = [category.strip() for category in input_categories.split(',')]
-
-        final_places_list = []
-
+    remaining_slots = 5 - len(final_places_list)
+    if remaining_slots > 0:
+        all_remaining_places = []
         for category in category_list:
-            verified_places_0 = get_verified_top_2_predictions(category, df0, knn_classifier0, tfidf_vectorizer0)
-            verified_places_1 = get_verified_top_2_predictions(category, df1, knn_classifier1, tfidf_vectorizer1)
-            
-            final_places = (verified_places_0 + verified_places_1)[:2]
-            
-            final_places_list.extend(final_places)
+            verified_places_0 = get_verified_predictions(category, df0, knn_classifier0, tfidf_vectorizer0)
+            verified_places_1 = get_verified_predictions(category, df1, knn_classifier1, tfidf_vectorizer1)
+            all_remaining_places.extend(verified_places_0 + verified_places_1)
 
-        st.subheader("Top 5 Recommended Places:")
-        for i, place in enumerate(final_places_list[:5], 1):
-            st.write(f"{i}. {place}")
+        remaining_places_df = pd.DataFrame(all_remaining_places)
+        if not remaining_places_df.empty:
+            remaining_places_df = remaining_places_df.sort_values('score', ascending=False)
+            remaining_places_df = remaining_places_df[~remaining_places_df['name'].isin(final_places_list)]
+            final_places_list.extend(remaining_places_df['name'].head(remaining_slots).tolist())
 
-if __name__ == "__main__":
-    main()
+    while len(final_places_list) < 5:
+        final_places_list.append(f"No additional place found {len(final_places_list) + 1}")
+
+    return final_places_list[:5]
+
+st.title('Place Predictor')
+
+
+input_categories = st.text_input("Enter categories (comma-separated):", "wildlife")
+
+if st.button('Predict Places'):
+   
+    predicted_places = predict_places(input_categories)
+    
+    
+    st.subheader("Top 5 Predicted Places:")
+    for i, place in enumerate(predicted_places, 1):
+        st.write(f"{i}. {place}")
